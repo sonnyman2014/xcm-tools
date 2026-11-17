@@ -24,9 +24,9 @@ export const computeOriginFee = (
     const isXcmEvent = ["XcmPallet", "PolkadotXcm", "CumulusXcm"].includes(
       e.pallet,
     );
-    const isFeesPaid = e.palletEvent.name === "FeesPaid";
+    const isFeesPaid = e.palletEvent?.name === "FeesPaid";
 
-    if (isXcmEvent && isFeesPaid && e.palletEvent.data.fees) {
+    if (isXcmEvent && isFeesPaid && e.palletEvent?.data?.fees) {
       for (const feeItem of e.palletEvent.data.fees) {
         if (feeItem.fun.type === "NonFungible") continue;
         const plancks = feeItem.fun.value;
@@ -35,15 +35,17 @@ export const computeOriginFee = (
         deliveryFees.push({ plancks, tokenSymbol });
       }
     }
+
     if (
       isFeeAsset &&
-      e.type === "AssetConversion" &&
-      e.value?.type === "SwapCreditExecuted" &&
-      e.value?.value &&
-      e.value.value.amount_in !== undefined &&
-      e.value.value.amount_in !== null
+      e.pallet === "AssetConversion" &&
+      e.palletEvent?.name === "SwapCreditExecuted"
     ) {
-      assetConversionFee += e.value.value.amount_in;
+      const amountIn =
+        e.palletEvent.data?.amountIn ?? e.palletEvent.data?.amount_in;
+      if (amountIn !== undefined && amountIn !== null) {
+        assetConversionFee += amountIn;
+      }
     }
   }
 

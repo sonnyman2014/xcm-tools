@@ -154,17 +154,13 @@ describe("computeOriginFee", () => {
             pallet: "AssetConversion",
             palletEvent: {
               name: "SwapCreditExecuted",
-              data: {},
-            },
-            type: "AssetConversion",
-            value: {
-              type: "SwapCreditExecuted",
-              value: {
-                amount_in: 1000n,
-                amount_out: 900n,
-                asset_in: "assetA",
-                asset_out: "assetB",
-                who: "someAccount",
+              data: {
+                amountIn: 1000n,
+                amountOut: 900n,
+                path: [
+                  ["assetA", 1000n],
+                  ["assetB", 900n],
+                ],
               },
             },
           },
@@ -209,49 +205,33 @@ describe("computeOriginFee", () => {
             pallet: "AssetConversion",
             palletEvent: {
               name: "SwapCreditExecuted",
-              data: {},
-            },
-            type: "AssetConversion",
-            value: {
-              type: "SwapCreditExecuted",
-              value: { amount_in: 1000n },
+              data: { amountIn: 1000n },
             },
           },
           {
             pallet: "AssetConversion",
             palletEvent: {
               name: "SwapCreditExecuted",
-              data: {},
-            },
-            type: "AssetConversion",
-            value: {
-              type: "SwapCreditExecuted",
-              value: { amount_in: 500n },
+              data: { amountIn: 500n },
             },
           },
           {
             pallet: "AssetConversion",
             palletEvent: {
               name: "SwapCreditExecuted",
-              data: {},
-            },
-            type: "AssetConversion",
-            value: {
-              type: "SwapCreditExecuted",
-              value: { amount_in: undefined },
+              data: { amountIn: undefined },
             },
           },
           {
             pallet: "AssetConversion",
             palletEvent: {
               name: "SwapCreditExecuted",
-              data: {},
+              data: { amountIn: null },
             },
-            type: "AssetConversion",
-            value: {
-              type: "SwapCreditExecuted",
-              value: { amount_in: null },
-            },
+          },
+          {
+            pallet: "AssetConversion",
+            palletEvent: "Touched",
           },
         ],
       },
@@ -272,6 +252,27 @@ describe("computeOriginFee", () => {
     expect(getLocationTokenId).not.toHaveBeenCalled();
   });
 
+  it("should accept snake_case amount_in fallback in SwapCreditExecuted palletEvent data", () => {
+    const dryRun = {
+      value: {
+        emittedEvents: [
+          {
+            pallet: "AssetConversion",
+            palletEvent: {
+              name: "SwapCreditExecuted",
+              data: { amount_in: 750n },
+            },
+          },
+        ],
+      },
+    };
+
+    const result = computeOriginFee(dryRun, mockChain, 200n, true);
+
+    expect(result).toBe(750n);
+    expect(getNativeAssetSymbol).not.toHaveBeenCalled();
+  });
+
   it("should use delivery and execution fees if isFeeAsset is true but no valid AssetConversion fee is found", () => {
     const dryRun = {
       value: {
@@ -280,13 +281,8 @@ describe("computeOriginFee", () => {
             pallet: "AssetConversion",
             palletEvent: {
               name: "SomeOtherAssetConversionEvent",
-              data: {},
-            },
-            type: "AssetConversion",
-            value: {
-              type: "SomeOtherAssetConversionEvent",
-              value: {
-                amount_in: 1000n,
+              data: {
+                amountIn: 1000n,
               },
             },
           },
@@ -294,13 +290,17 @@ describe("computeOriginFee", () => {
             pallet: "AssetConversion",
             palletEvent: {
               name: "SwapCreditExecuted",
-              data: {},
+              data: {
+                amountOut: 900n,
+              },
             },
-            type: "AssetConversion",
-            value: {
-              type: "SwapCreditExecuted",
-              value: {
-                amount_out: 900n,
+          },
+          {
+            pallet: "AssetConversion",
+            palletEvent: {
+              name: "SwapCreditExecuted",
+              data: {
+                amountIn: 0n,
               },
             },
           },
@@ -347,14 +347,9 @@ describe("computeOriginFee", () => {
             pallet: "AssetConversion",
             palletEvent: {
               name: "SwapCreditExecuted",
-              data: {},
-            },
-            type: "AssetConversion",
-            value: {
-              type: "SwapCreditExecuted",
-              value: {
-                amount_in: 1000n,
-                amount_out: 900n,
+              data: {
+                amountIn: 1000n,
+                amountOut: 900n,
               },
             },
           },
